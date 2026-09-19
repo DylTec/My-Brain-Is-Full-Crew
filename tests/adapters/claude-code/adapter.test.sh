@@ -59,6 +59,9 @@ EOF
   [[ -f "$dst/.claude/settings.json" ]] || { echo "settings.json missing"; result=1; }
   grep -q "PreToolUse" "$dst/.claude/settings.json" || { echo "PreToolUse not in settings"; result=1; }
   grep -q "Edit|Write" "$dst/.claude/settings.json" || { echo "matcher missing"; result=1; }
+  jq -e '.hooks.PreToolUse[0].hooks[0].command == "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/protect-wrapper.sh\""' \
+    "$dst/.claude/settings.json" >/dev/null \
+    || { echo "hook command should use \$CLAUDE_PROJECT_DIR: $(cat "$dst/.claude/settings.json")"; result=1; }
   rm -rf "$src" "$dst"
   return $result
 }

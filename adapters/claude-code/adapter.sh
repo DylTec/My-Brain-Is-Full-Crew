@@ -181,10 +181,12 @@ adapter_translate_hooks() {
     # Build the settings.json entry for this hook
     local matcher=""
     [[ -n "$match_tool" ]] && matcher="$(cc_match_tool_to_matcher "$match_tool")"
+    # Claude Code hook cwd is the invoking tool's cwd, not always the vault
+    # root. $CLAUDE_PROJECT_DIR is always the project root, so quote it.
     local entry; entry="$(jq -cn \
-      --arg cmd ".claude/hooks/${name}-wrapper.sh" \
+      --arg cmd "\$CLAUDE_PROJECT_DIR/.claude/hooks/${name}-wrapper.sh" \
       --arg matcher "$matcher" \
-      '{matcher: $matcher, hooks: [{type: "command", command: ("bash " + $cmd)}]}')"
+      '{matcher: $matcher, hooks: [{type: "command", command: ("bash \"" + $cmd + "\"")}]}')"
 
     case "$cc_event" in
       PreToolUse)        pre_entries="$pre_entries$entry"$'\n' ;;
