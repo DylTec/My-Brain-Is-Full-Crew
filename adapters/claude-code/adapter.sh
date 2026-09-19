@@ -147,6 +147,10 @@ cc_model_to_native() {
 }
 
 # adapter_translate_hooks <source_hooks_dir> <dest_root>
+#
+# Copy hook scripts, generate Claude Code wrappers, and write .claude/settings.json.
+# Wrapper commands use $CLAUDE_PROJECT_DIR so they resolve when tool cwd is not
+# the vault root.
 adapter_translate_hooks() {
   local src="$1" dst="$2"
   [[ -d "$src" ]] || return 0

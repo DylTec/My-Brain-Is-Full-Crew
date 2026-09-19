@@ -37,6 +37,8 @@ EOF
   return $result
 }
 
+# Assert hook scripts, wrappers, and settings.json are written, including a
+# $CLAUDE_PROJECT_DIR-prefixed wrapper command so cwd ≠ vault root still works.
 test_translate_hooks_creates_files() {
   local src; src="$(mktemp -d)"
   local dst; dst="$(mktemp -d)"
