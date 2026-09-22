@@ -57,7 +57,7 @@ All agents read `Meta/user-profile.md` for personalization. This file is created
 
 **Role**: Search & Intelligence
 **Agent file**: `seeker.md`
-**Responsibilities**: Finds and retrieves information across the vault using full-text search, metadata queries, and relationship navigation. Synthesizes answers from multiple notes with citations. Can modify notes on request. Handles timeline mode, diff mode, and missing knowledge detection.
+**Responsibilities**: Finds and retrieves information across the vault using full-text search, metadata queries, and relationship navigation. Native Obsidian search is available via the `/obsidian-cli` skill. Synthesizes answers from multiple notes with citations. Can modify notes on request. Handles timeline mode, diff mode, and missing knowledge detection.
 **Contact when**: Information needs to be found or verified before acting. A note's location is unknown. A cross-reference is needed. The user asks a factual question.
 
 ---
@@ -123,6 +123,8 @@ The dispatcher routes triggers to skills FIRST, then falls through to agents.
 | `/deep-clean` | Librarian | Extended vault cleanup |
 | `/tag-garden` | Librarian | Tag analysis and gardening |
 | `/inbox-triage` | Sorter | Inbox note processing and routing |
+| `/contact-sync` | Postman | Sync contacts to Apple Contacts |
+| `/obsidian-cli` | Shared | Vault ops via Obsidian CLI (move/rename, search, link health) |
 
 ---
 

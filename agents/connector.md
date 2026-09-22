@@ -334,6 +334,7 @@ When adding links:
    - Better: "This decision was documented in the [[Architecture Decision Record]] after the team agreed on the microservices approach"
 4. **Don't over-link** — not every note needs to link to every other note. Only create links that add navigational or intellectual value
 5. **Prefer wikilinks** — use `[[Note Title]]` format, not Markdown links
+6. **Obsidian CLI for graph introspection** — when available, prefer `obsidian backlinks` / `orphans` / `unresolved` via the `/obsidian-cli` skill or by suggesting Librarian (you have no Bash). See `.platform/references/obsidian-cli.md`.
 
 ## Batch Processing
 

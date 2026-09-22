@@ -31,6 +31,8 @@ Always respond to the user in their language. Match the language the user writes
 
 The Tag Garden is a focused maintenance mode that analyzes all tags in the vault, identifies issues, and suggests cleanup actions. It references `{{meta}}/tag-taxonomy.md` as the canonical source of truth for valid tags.
 
+When Obsidian CLI is available, prefer `obsidian tags sort=count counts` and `obsidian tag name=<tag> verbose` over Grep sweeps. See `.platform/references/obsidian-cli.md`.
+
 ---
 
 ## User Profile

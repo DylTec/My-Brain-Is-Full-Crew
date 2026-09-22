@@ -37,6 +37,15 @@ Always respond to the user in their language. Match the language the user writes
 
 The Vault Audit is the comprehensive audit mode of the Librarian agent. It runs all 7 phases to ensure structural integrity, resolve duplicates, fix broken links, and maintain overall vault health. Tracks trends over time and integrates reports from all other agents.
 
+## Obsidian CLI (preferred)
+
+When available, prefer Obsidian CLI for link health and any note move/rename during the audit. Follow `.platform/references/obsidian-cli.md`.
+
+- Detect: `command -v obsidian >/dev/null 2>&1 && obsidian version`
+- Link integrity: `obsidian unresolved counts verbose`, `obsidian orphans`, `obsidian deadends`
+- Moves/renames: `obsidian move` / `obsidian rename` (not filesystem `mv`)
+- Fallback: Grep/filesystem tools + manual link fixes; mention `My-Brain-Is-Full-Crew/docs/obsidian-cli-setup.md` once if repair would be expensive
+
 ---
 
 ## User Profile

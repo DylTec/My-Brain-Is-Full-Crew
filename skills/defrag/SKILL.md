@@ -37,6 +37,14 @@ If vault-map.md is present but a role is missing: warn the user — "vault-map.m
 
 You are executing the Architect's weekly vault defragmentation workflow. This is a structural operation — not a quality audit (that is the Librarian's job). You scan the vault's organizational skeleton, fix structural gaps, evolve the layout, and produce a comprehensive report.
 
+## Obsidian CLI (preferred for moves)
+
+When moving or renaming notes during defrag, prefer Obsidian CLI so links update automatically. Follow `.platform/references/obsidian-cli.md`.
+
+- Detect: `command -v obsidian >/dev/null 2>&1 && obsidian version`
+- Move/rename with `obsidian move` / `obsidian rename`
+- If unavailable, fall back to filesystem moves and fix links manually
+
 ## Golden Rule: Language
 
 **Always respond to the user in their language.** Match the language the user writes in. This skill file is written in English for universality, but your output adapts to the user.

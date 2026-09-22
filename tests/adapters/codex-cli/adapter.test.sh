@@ -213,6 +213,7 @@ test_cc_translate_skills_real_corpus_has_exact_skill_directories() {
     inbox-triage
     manage-agent
     meeting-prep
+    obsidian-cli
     onboarding
     tag-garden
     transcribe
@@ -221,8 +222,8 @@ test_cc_translate_skills_real_corpus_has_exact_skill_directories() {
   )
 
   mapfile -t actual < <(find "$dst/.agents/skills" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort)
-  [[ "${#actual[@]}" -eq 14 ]] \
-    || { echo "expected 14 generated skill directories, found ${#actual[@]}: ${actual[*]}"; result=1; }
+  [[ "${#actual[@]}" -eq 15 ]] \
+    || { echo "expected 15 generated skill directories, found ${#actual[@]}: ${actual[*]}"; result=1; }
 
   local idx
   for idx in "${!expected[@]}"; do

@@ -39,6 +39,14 @@ Always respond to the user in their language. Match the language the user writes
 
 The Deep Clean is the most thorough maintenance mode. It runs the full 7-phase audit PLUS additional deep-cleaning passes for stale content, outdated references, content quality, redundant tags, broken external links, and template compliance.
 
+## Obsidian CLI (preferred)
+
+Prefer Obsidian CLI for link health and note move/rename. Follow `.platform/references/obsidian-cli.md`.
+
+- Detect: `command -v obsidian >/dev/null 2>&1 && obsidian version`
+- `obsidian unresolved` / `orphans` / `move` / `rename` when available
+- Fallback to filesystem tools if CLI is missing
+
 ---
 
 ## User Profile

@@ -385,6 +385,10 @@ EOF
 
 If only Gmail was selected, omit the Google Calendar entry and vice versa.
 
+**C2. Optional: Obsidian CLI**
+
+Mention that agents can use the official Obsidian CLI for move/rename (automatic link updates) and search when Obsidian is running. Point the user to `My-Brain-Is-Full-Crew/docs/obsidian-cli-setup.md`. This is optional — the Crew works without it.
+
 **D. Inform the user about the scoping**
 
 After completing B and C, explain clearly:

@@ -104,6 +104,12 @@ If you detect that the user needs functionality that NO existing agent provides,
 
 ---
 
+## Obsidian CLI (preferred for search)
+
+You do **not** have Bash. For native Obsidian search, backlinks, or unresolved-link queries, prefer the `/obsidian-cli` skill (dispatcher routes phrases like "obsidian search" / "cli search the vault"). For routine lookups in this agent, use Grep/Glob below. See `.platform/references/obsidian-cli.md` and `My-Brain-Is-Full-Crew/docs/obsidian-cli-setup.md`.
+
+---
+
 ## Search & Retrieval Modes
 
 ### Mode 1: Standard Search (default)
@@ -113,7 +119,7 @@ Find notes matching the user's query using multiple search strategies.
 #### Search Capabilities
 
 **1. Full-Text Search**
-1. Search file contents using Grep for keywords and phrases
+1. Search file contents using Grep for keywords and phrases (or rely on `/obsidian-cli` when the user wants native Obsidian search)
 2. Search filenames using Glob for pattern matching
 3. Search YAML frontmatter for metadata queries
 4. Rank results by relevance (title match > frontmatter match > body match)
