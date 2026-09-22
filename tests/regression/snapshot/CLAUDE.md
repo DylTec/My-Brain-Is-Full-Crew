@@ -4,7 +4,7 @@
 
 ## ABSOLUTE CONSTRAINT: ONLY skills and agents from THIS project
 
-Your crew consists of **14 skills** (in `.claude/skills/`) and **8 core agents** (in `.claude/agents/`). Your agent platform auto-loads both at session start.
+Your crew consists of **15 skills** (in `.claude/skills/`) and **8 core agents** (in `.claude/agents/`). Your agent platform auto-loads both at session start.
 
 The 8 core agents are:
 
@@ -53,6 +53,7 @@ Skills handle complex, multi-step flows. **Check this table BEFORE the agent tab
 | 12 | `/tag-garden` | Analyze all vault tags: unused, orphan, near-duplicates, over/under-used. Suggest merges. | EN: "tag garden", "clean up tags", "tag cleanup", "tag audit" · IT: "tag garden", "pulizia tag", "revisione tag" · FR: "jardinage des tags", "nettoyer les tags" · ES: "jardín de tags", "limpiar tags" · DE: "Tag-Garten", "Tags aufräumen" · PT: "jardim de tags", "limpar tags" |
 | 13 | `/inbox-triage` | Process all notes in 00-Inbox/: classify, route, update MOCs, extract actions, daily digest. | EN: "triage the inbox", "clean up the inbox", "sort my notes", "empty inbox", "file my notes", "process the inbox" · IT: "smista l'inbox", "svuota l'inbox", "ordina le note", "triage dell'inbox", "processa l'inbox" · FR: "trier la boîte de réception", "vider l'inbox", "classer mes notes" · ES: "clasificar la bandeja de entrada", "vaciar el inbox", "ordenar mis notas" · DE: "Inbox sortieren", "Inbox leeren", "Notizen einordnen" · PT: "triagem da inbox", "esvaziar a inbox", "organizar minhas notas" |
 | 14 | `/contact-sync` | Sync a person to Apple Contacts: search, create if missing, update if incomplete. Requires `apple-contacts` MCP. | EN: "sync contact", "add to contacts", "save contact", "update contact", "is this person in my contacts" · IT: "sincronizza contatto", "aggiungi ai contatti", "salva contatto", "aggiorna contatto" · FR: "synchroniser le contact", "ajouter aux contacts" · ES: "sincronizar contacto", "agregar a contactos" · DE: "Kontakt synchronisieren", "zu Kontakten hinzufuegen" · PT: "sincronizar contato", "adicionar aos contatos" |
+| 15 | `/obsidian-cli` | Vault ops via official Obsidian CLI: move/rename with link updates, search, backlinks, unresolved/orphans, properties/tags. Optional — falls back to filesystem tools. | EN: "obsidian cli", "use obsidian cli", "move with obsidian", "rename with obsidian", "obsidian search", "cli search the vault", "update links with obsidian" · IT: "obsidian cli", "usa obsidian cli", "sposta con obsidian", "rinomina con obsidian", "cerca con obsidian" · FR: "obsidian cli", "utiliser obsidian cli", "déplacer avec obsidian", "chercher avec obsidian" · ES: "obsidian cli", "usar obsidian cli", "mover con obsidian", "buscar con obsidian" · DE: "obsidian cli", "obsidian cli verwenden", "mit obsidian verschieben", "mit obsidian suchen" · PT: "obsidian cli", "usar obsidian cli", "mover com obsidian", "buscar com obsidian" |
 
 ---
 
@@ -278,6 +279,7 @@ Only changed files are overwritten. Your vault notes are never touched.
 - A supported **agent platform** (see the README for details)
 - **Obsidian** (free) — [obsidian.md](https://obsidian.md)
 - **Gmail / Google Calendar** (optional) — only for the Postman agent
+- **Obsidian CLI** (optional) — installer 1.12.7+ with CLI enabled; improves move/rename/search. See `docs/obsidian-cli-setup.md`
 
 ## Project Structure
 

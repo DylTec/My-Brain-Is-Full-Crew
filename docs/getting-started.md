@@ -249,6 +249,9 @@ For MCP connectors:
 - **Claude Code / OpenCode**: run the installer again (`bash scripts/launchme.sh`) and answer **yes** to the Gmail/Calendar question, or manually add the servers to your `.mcp.json` at the vault root.
 - **Codex CLI**: MCP servers are configured in `.codex/config.toml` (not `.mcp.json`). Run `bash scripts/launchme.sh --platform codex-cli` and the installer writes them automatically. See [docs/codex-cli.md](codex-cli.md) for the full MCP setup details.
 
+### "Moves break my wikilinks" / "Can agents use Obsidian CLI?"
+Optional: enable the official Obsidian CLI so moves/renames update links through Obsidian. See `docs/obsidian-cli-setup.md`. Say "obsidian cli" to invoke the `/obsidian-cli` skill. Without it, agents still work via filesystem tools.
+
 ### "My vault structure looks different from the docs"
 The Architect customizes the structure based on your onboarding answers.
 

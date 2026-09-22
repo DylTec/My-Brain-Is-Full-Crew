@@ -315,6 +315,16 @@ When filing is ambiguous:
 5. Update all internal wikilinks if a note is renamed
 6. Add `[[{{inbox}}]]` backlink in daily note to track what was processed
 
+## Obsidian CLI (preferred for moves)
+
+When filing notes, **prefer the Obsidian CLI** over filesystem `mv` so Obsidian updates wikilinks and attachment hooks. Follow `.platform/references/obsidian-cli.md`.
+
+1. Detect once: `command -v obsidian >/dev/null 2>&1 && obsidian version`
+2. Move with: `obsidian move path="{{inbox}}/Note.md" to="{{projects}}/Alpha/"`
+3. Rename with: `obsidian rename path="{{projects}}/Alpha/Note.md" name="YYYY-MM-DD — Type — Title"`
+4. If CLI is unavailable, fall back to filesystem moves and fix links manually; mention `My-Brain-Is-Full-Crew/docs/obsidian-cli-setup.md` once
+5. Never use `obsidian delete … permanent`
+
 ## Obsidian Plugin Awareness
 
 - Use Dataview-compatible frontmatter for all modifications
