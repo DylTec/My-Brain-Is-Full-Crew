@@ -1,0 +1,30 @@
+{
+  "skills": [
+    "deep-clean"
+  ],
+  "query": "deep clean",
+  "files": [],
+  "expected_behavior": [
+    "Runs the full audit and then scans for stale content, redundant tags, and template drift",
+    "Treats a messy-vault request as this workflow rather than a one-line health check",
+    "Archives stale notes instead of deleting them"
+  ],
+  "routing": [
+    {
+      "query": "deep clean",
+      "expect": "skill:deep-clean"
+    },
+    {
+      "query": "pulizia profonda",
+      "expect": "skill:deep-clean"
+    },
+    {
+      "query": "the vault is a mess, please help",
+      "expect": "skill:deep-clean"
+    },
+    {
+      "query": "I need a thorough cleanup",
+      "expect": "skill:deep-clean"
+    }
+  ]
+}

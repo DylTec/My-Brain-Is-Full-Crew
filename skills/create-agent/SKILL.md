@@ -195,7 +195,26 @@ Before writing the agent .md file, verify you have checked off ALL of these. If 
 5. **Update the registry**: add a new row to `.platform/references/agents-registry.md` — insert it between the `<!-- MBIFC:CUSTOM_AGENTS_START -->` and `<!-- MBIFC:CUSTOM_AGENTS_END -->` markers in the Registry table (after the postman row)
 6. **Update the directory**: add a new section under "Custom Agents" in `.platform/references/agents.md` — insert it between the `<!-- MBIFC:CUSTOM_AGENTS_START -->` and `<!-- MBIFC:CUSTOM_AGENTS_END -->` markers in that file
 7. **Log the creation** in `{{meta}}/agent-log.md`
-8. **Report to the user**: "Your new agent `{name}` is now active. You can try it by saying one of your trigger phrases."
+8. **Write a routing eval** to `{{meta}}/evals/agents/{name}.json`. Quote every trigger phrase the user chose (at least 6):
+
+```json
+{
+  "agent": "{name}",
+  "routing": [
+    {"query": "{trigger phrase}", "expect": "agent:{name}"}
+  ]
+}
+```
+
+9. **Run the routing eval** before telling the user the agent is active:
+
+```bash
+python3 {{meta}}/scripts/eval-routing
+```
+
+The command re-reads every skill and every custom agent currently in the vault, so the result stays valid as agents are added or removed later. If a trigger is captured by a skill or by another agent, ask the user for a replacement phrase and run the command again. Do not report success until it exits 0. If the script is missing, ask the user to run `bash scripts/updateme.sh` from the crew repo, then run the eval.
+
+10. **Report to the user**: "Your new agent `{name}` is now active. You can try it by saying one of your trigger phrases."
 
 ---
 

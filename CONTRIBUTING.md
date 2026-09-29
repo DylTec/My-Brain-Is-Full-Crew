@@ -267,12 +267,25 @@ cp dist/claude-code/CLAUDE.md tests/regression/snapshot/CLAUDE.md
 bash tests/regression/run.sh   # should now pass
 ```
 
+### Skill routing evals
+
+Skills trigger from the `description` in `SKILL.md` and again from the dispatcher table. `orchestra/eval-routing` checks that those lists match, that every documented phrase routes to its skill, and that near-miss phrases route somewhere else. The fixtures live in `evals/skills/<name>.json` (Anthropic-style `query`, `files`, and `expected_behavior`, plus a `routing` list). `expected_behavior` is the rubric for a later manual or model review; the command itself does not call a model.
+
+```bash
+python3 orchestra/eval-routing
+```
+
+The same command is installed into a vault as `Meta/scripts/eval-routing`. There it re-reads the agents that are actually installed, so adding or removing a custom agent changes what gets checked. A custom agent needs at least six double-quoted trigger phrases, a registry row, and phrases that a skill or another agent does not already own.
+
+When you add or change a skill trigger, update the skill description, the dispatcher row, and `evals/skills/<name>.json` together.
+
 ### When to run tests
 
 - After modifying any adapter: run that adapter's tests
 - After modifying `adapters/lib.sh`: run all adapter tests
 - After modifying source files (agents, skills, references, hooks, DISPATCHER.md): run the regression test
-- Before submitting a PR: run everything
+- After modifying skill triggers or `evals/`: run `python3 orchestra/eval-routing`
+- Before submitting a PR: run everything (`bash tests/run.sh`)
 
 ---
 

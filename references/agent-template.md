@@ -19,11 +19,11 @@ name: {{agent-name}}
 
 description: >
   {{One-paragraph description of what the agent does, written in the user's language.}}
-  Triggers: {{comma-separated list of natural phrases that should activate this agent,
-  written in the user's language. Include at least 6-8 trigger phrases.}}
+  Triggers: "{{phrase one}}", "{{phrase two}}", "{{phrase three}}"
 # NOTE: The description is what the platform reads to auto-trigger the agent.
-# Write it in the language the user speaks. Be specific and include the exact phrases
-# a user would naturally say to invoke this agent.
+# Write it in the language the user speaks. Put every trigger phrase in double quotes.
+# Include at least 6-8 phrases the user would naturally say. The routing eval reads
+# those quotes; unquoted phrases are invisible to it.
 
 tools: {{tool list}}
 # Available tools and when to grant them:
@@ -214,3 +214,4 @@ When generating a custom agent from this template:
 6. **File location**: `.platform/agents/{{agent-name}}.md`
 7. **Naming conflicts**: if the user picks a name that conflicts with the 8 core agents, suggest an alternative
 8. **Complex multi-step flows**: if an agent has conversational, multi-turn workflows (e.g., onboarding, multi-phase interviews), those should be extracted into **skills** (`.platform/skills/`) rather than kept in the agent body. Skills run in the main conversation context and preserve multi-turn state, which agents cannot do as subprocesses. See the 13 core skills in `.platform/references/agents.md` (Skills section) for examples
+9. **Routing eval**: after saving the agent, write `Meta/evals/agents/{{agent-name}}.json` with one query per trigger phrase (`"expect": "agent:{{agent-name}}"`) and run `python3 Meta/scripts/eval-routing`. Re-run that command whenever agents are added or removed. A trigger that a skill or another agent already owns will never reach this agent.

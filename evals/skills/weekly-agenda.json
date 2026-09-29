@@ -1,0 +1,30 @@
+{
+  "skills": [
+    "weekly-agenda"
+  ],
+  "query": "weekly agenda",
+  "files": [],
+  "expected_behavior": [
+    "Produces a day-by-day view of the week",
+    "Combines calendar events, email deadlines, and vault tasks",
+    "Reads the user profile before assembling the agenda"
+  ],
+  "routing": [
+    {
+      "query": "weekly agenda",
+      "expect": "skill:weekly-agenda"
+    },
+    {
+      "query": "agenda settimanale",
+      "expect": "skill:weekly-agenda"
+    },
+    {
+      "query": "what's this week looking like",
+      "expect": "skill:weekly-agenda"
+    },
+    {
+      "query": "help me plan my week",
+      "expect": "skill:weekly-agenda"
+    }
+  ]
+}

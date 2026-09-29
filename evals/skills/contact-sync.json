@@ -1,0 +1,30 @@
+{
+  "skills": [
+    "contact-sync"
+  ],
+  "query": "sync contact",
+  "files": [],
+  "expected_behavior": [
+    "Searches Apple Contacts before creating a person",
+    "Updates an existing contact when known fields are missing",
+    "Does not invent phone numbers or email addresses that are not already in the vault"
+  ],
+  "routing": [
+    {
+      "query": "sync contact",
+      "expect": "skill:contact-sync"
+    },
+    {
+      "query": "sincronizza contatto",
+      "expect": "skill:contact-sync"
+    },
+    {
+      "query": "add to contacts: Ada Lovelace",
+      "expect": "skill:contact-sync"
+    },
+    {
+      "query": "is this person in my contacts",
+      "expect": "skill:contact-sync"
+    }
+  ]
+}

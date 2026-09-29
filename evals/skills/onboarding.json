@@ -1,0 +1,30 @@
+{
+  "skills": [
+    "onboarding"
+  ],
+  "query": "initialize the vault",
+  "files": [],
+  "expected_behavior": [
+    "Asks for preferences, life areas, and integrations before creating any folders",
+    "Creates the vault structure and Meta/vault-map.md from those answers",
+    "Does not generate the whole vault from a single message"
+  ],
+  "routing": [
+    {
+      "query": "initialize the vault",
+      "expect": "skill:onboarding"
+    },
+    {
+      "query": "inizializza il vault",
+      "expect": "skill:onboarding"
+    },
+    {
+      "query": "please set up the vault this weekend",
+      "expect": "skill:onboarding"
+    },
+    {
+      "query": "Vaultを初期化",
+      "expect": "skill:onboarding"
+    }
+  ]
+}

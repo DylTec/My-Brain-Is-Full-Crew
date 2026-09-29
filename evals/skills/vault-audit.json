@@ -1,0 +1,30 @@
+{
+  "skills": [
+    "vault-audit"
+  ],
+  "query": "vault audit",
+  "files": [],
+  "expected_behavior": [
+    "Covers structure, duplicates, links, frontmatter, MOCs, and a health report",
+    "Reports what it found with counts instead of deleting notes",
+    "Asks before applying cleanup that would remove or merge content"
+  ],
+  "routing": [
+    {
+      "query": "vault audit",
+      "expect": "skill:vault-audit"
+    },
+    {
+      "query": "controlla il vault",
+      "expect": "skill:vault-audit"
+    },
+    {
+      "query": "let's do the weekly review",
+      "expect": "skill:vault-audit"
+    },
+    {
+      "query": "how is vault health",
+      "expect": "skill:vault-audit"
+    }
+  ]
+}

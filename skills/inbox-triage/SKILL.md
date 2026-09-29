@@ -5,7 +5,7 @@ description: >
   location, update MOCs, extract action items, and generate a daily digest. Triggers:
   EN: "triage the inbox", "clean up the inbox", "sort my notes", "empty inbox", "file my notes", "process the inbox".
   IT: "smista l'inbox", "svuota l'inbox", "ordina le note", "triage dell'inbox", "processa l'inbox".
-  FR: "trier la boite de réception", "vider l'inbox", "classer mes notes".
+  FR: "trier la boîte de réception", "vider l'inbox", "classer mes notes".
   ES: "clasificar la bandeja de entrada", "vaciar el inbox", "ordenar mis notas".
   DE: "Inbox sortieren", "Inbox leeren", "Notizen einordnen".
   PT: "triagem da inbox", "esvaziar a inbox", "organizar minhas notas".

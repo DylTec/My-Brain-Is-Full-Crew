@@ -1,0 +1,30 @@
+{
+  "skills": [
+    "deadline-radar"
+  ],
+  "query": "deadline radar",
+  "files": [],
+  "expected_behavior": [
+    "Groups deadlines into overdue, critical, upcoming, and distant",
+    "Pulls deadlines from email, calendar, and the vault",
+    "Writes the postman post-it at the end of the run"
+  ],
+  "routing": [
+    {
+      "query": "deadline radar",
+      "expect": "skill:deadline-radar"
+    },
+    {
+      "query": "le mie scadenze",
+      "expect": "skill:deadline-radar"
+    },
+    {
+      "query": "what are my deadlines this month",
+      "expect": "skill:deadline-radar"
+    },
+    {
+      "query": "show this week's deadlines",
+      "expect": "skill:deadline-radar"
+    }
+  ]
+}

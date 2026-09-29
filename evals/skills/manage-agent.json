@@ -1,0 +1,30 @@
+{
+  "skills": [
+    "manage-agent"
+  ],
+  "query": "list agents",
+  "files": [],
+  "expected_behavior": [
+    "Shows the current agent configuration before applying an edit",
+    "Updates the registry when triggers or the description change, and refreshes that agent's eval file",
+    "Refuses to delete a core agent and removes the custom eval file when a custom agent is removed"
+  ],
+  "routing": [
+    {
+      "query": "list agents",
+      "expect": "skill:manage-agent"
+    },
+    {
+      "query": "mostra i miei agenti",
+      "expect": "skill:manage-agent"
+    },
+    {
+      "query": "please edit my agent habit-tracker",
+      "expect": "skill:manage-agent"
+    },
+    {
+      "query": "delete agent budget-tracker",
+      "expect": "skill:manage-agent"
+    }
+  ]
+}

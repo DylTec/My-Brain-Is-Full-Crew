@@ -170,6 +170,8 @@ Custom agents participate in the same orchestration protocol as core agents:
 
 Say "create a new agent" or "I need a custom agent" to start the process. The `/create-agent` skill guides you through a 6-phase interview to define the agent's purpose, triggers, permissions, and coordination rules.
 
+After each create, edit, or removal, run `python3 Meta/scripts/eval-routing`. It re-reads the agents currently installed, so trigger collisions are caught as the crew grows.
+
 ### Managing Custom Agents
 
 Use the `/manage-agent` skill:

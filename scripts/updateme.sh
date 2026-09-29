@@ -201,6 +201,9 @@ fi
 install_dispatcher "$DISPATCHER_SRC" "$DISPATCHER_DST"
 DISPATCHER_CHANGED=$_LAST_CHANGED
 
+EVAL_COUNT=$(install_routing_evals "$REPO_DIR" "$VAULT_DIR")
+[[ "$EVAL_COUNT" != "0" ]] && info "Routing evals: $EVAL_COUNT skill fixtures in Meta/evals/skills/"
+
 # ── MCP / opencode.json ───────────────────────────────────────────────────────
 if [[ -f "$MCP_SRC" ]]; then
   if [[ "$PLATFORM" == "opencode" && -f "$MCP_DST" ]]; then

@@ -1,0 +1,30 @@
+{
+  "skills": [
+    "transcribe"
+  ],
+  "query": "transcribe",
+  "files": [],
+  "expected_behavior": [
+    "Runs the intake interview for date, mode, speakers, and language before processing",
+    "Produces structured notes with action items and decisions",
+    "Leaves the note in the inbox instead of filing it into a guessed folder"
+  ],
+  "routing": [
+    {
+      "query": "transcribe",
+      "expect": "skill:transcribe"
+    },
+    {
+      "query": "trascrivi",
+      "expect": "skill:transcribe"
+    },
+    {
+      "query": "I have a recording from standup",
+      "expect": "skill:transcribe"
+    },
+    {
+      "query": "please summarize the call",
+      "expect": "skill:transcribe"
+    }
+  ]
+}
