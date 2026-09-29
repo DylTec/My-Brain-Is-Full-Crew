@@ -1,0 +1,617 @@
+#!/usr/bin/env python3
+"""Route-trigger evals for crew skills and vault custom agents.
+
+Skills are selected from the description in SKILL.md and, separately, from the
+dispatcher routing table. These checks fail when those two lists drift, when a
+documented phrase does not route to its skill, or when a near-miss phrase routes
+to the wrong place.
+
+In a vault, the same script re-reads whatever agents are installed. Adding or
+removing a custom agent changes the route table on the next run. A custom
+agent fails when one of its phrases is captured by a skill or by another agent.
+
+No model calls. Trigger text is matched literally (case-folded, punctuation
+ignored) so the check can run in CI and inside a vault.
+
+Usage:
+  orchestra/eval-routing                 # this repo
+  orchestra/eval-routing --vault PATH    # an installed vault
+  orchestra/eval-routing --json
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sys
+from pathlib import Path
+
+CORE_AGENTS = {
+    "architect",
+    "scribe",
+    "sorter",
+    "seeker",
+    "connector",
+    "librarian",
+    "transcriber",
+    "postman",
+}
+MIN_CUSTOM_TRIGGERS = 6
+DESC_MAX = 1024
+
+SKILL_ROW = re.compile(r"^\|\s*\d+\s*\|\s*`(/[^`]+)`\s*\|")
+AGENT_HEAD = re.compile(r"^##\s+\d+\.\s+([A-Za-z][A-Za-z0-9-]*)\s+\(agent\)\s*$", re.M)
+QUOTED = re.compile(r'"([^"]+)"')
+FRONTMATTER = re.compile(r"^---\s*\n(.*?)\n---", re.S)
+
+
+def normalize(text: str) -> str:
+    text = (
+        text.replace("\u2019", "'")
+        .replace("\u2018", "'")
+        .replace("\u201c", '"')
+        .replace("\u201d", '"')
+        .replace("\u00a0", " ")
+    )
+    text = text.casefold()
+    text = re.sub(r"[^\w]+", " ", text, flags=re.UNICODE)
+    return " ".join(text.split())
+
+
+def contains_phrase(query_norm: str, trigger_norm: str) -> bool:
+    if not trigger_norm:
+        return False
+    return f" {trigger_norm} " in f" {query_norm} "
+
+
+def quoted_phrases(text: str) -> list[str]:
+    return [p.strip() for p in QUOTED.findall(text) if p.strip()]
+
+
+def parse_frontmatter(text: str) -> dict[str, str]:
+    match = FRONTMATTER.search(text)
+    if not match:
+        return {}
+    fields: dict[str, str] = {}
+    current = None
+    buf: list[str] = []
+    for line in match.group(1).splitlines():
+        if current and (line.startswith(" ") or line.startswith("\t")):
+            buf.append(line.strip())
+            continue
+        if current is not None:
+            fields[current] = " ".join(buf).strip()
+            current = None
+            buf = []
+        if ":" not in line or line.startswith(" ") or line.startswith("-"):
+            continue
+        key, _, rest = line.partition(":")
+        key = key.strip()
+        rest = rest.strip()
+        if rest in {">", "|", ""}:
+            current = key
+            buf = []
+        else:
+            fields[key] = rest.strip().strip('"').strip("'")
+    if current is not None:
+        fields[current] = " ".join(buf).strip()
+    return fields
+
+
+def trigger_region(description: str) -> str:
+    marker = description.casefold().find("triggers:")
+    if marker < 0:
+        return ""
+    return description[marker + len("triggers:") :]
+
+
+def load_skill_file(path: Path) -> dict:
+    text = path.read_text(encoding="utf-8")
+    fields = parse_frontmatter(text)
+    description = fields.get("description", "")
+    phrases = quoted_phrases(trigger_region(description))
+    return {
+        "name": fields.get("name", path.parent.name),
+        "path": path,
+        "description": description,
+        "phrases": phrases,
+        "triggers": [normalize(p) for p in phrases],
+    }
+
+
+def parse_dispatcher(text: str) -> tuple[dict[str, list[str]], list[dict]]:
+    """Return skill name -> raw phrases, and core agent trigger records."""
+    skills: dict[str, list[str]] = {}
+    for line in text.splitlines():
+        if not SKILL_ROW.match(line):
+            continue
+        cols = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cols) < 4:
+            continue
+        name = cols[1].strip("`").lstrip("/")
+        skills[name] = quoted_phrases(cols[-1])
+
+    agents: list[dict] = []
+    for chunk in re.split(r"(?=^## )", text, flags=re.M):
+        head = AGENT_HEAD.match(chunk)
+        if not head:
+            continue
+        name = head.group(1).lower()
+        phrases: list[str] = []
+        for line in chunk.splitlines():
+            if line.startswith("Triggers:"):
+                phrases.extend(quoted_phrases(line))
+        priority = len(agents) + 1
+        agents.append(
+            {
+                "name": name,
+                "kind": "core",
+                "priority": priority,
+                "phrases": phrases,
+                "triggers": [normalize(p) for p in phrases],
+            }
+        )
+    return skills, agents
+
+
+def discover_skill_dirs(root: Path) -> list[Path]:
+    found: list[Path] = []
+    candidates = [
+        root / "skills",
+        root / ".claude" / "skills",
+        root / ".gemini" / "skills",
+        root / ".opencode" / "skills",
+        root / ".agents" / "skills",
+    ]
+    for directory in candidates:
+        if directory.is_dir() and any(directory.glob("*/SKILL.md")):
+            found.append(directory)
+    return found
+
+
+def discover_dispatcher(root: Path) -> Path | None:
+    for name in ("DISPATCHER.md", "CLAUDE.md", "GEMINI.md", "AGENTS.md"):
+        path = root / name
+        if path.is_file() and "## Skill routing" in path.read_text(encoding="utf-8"):
+            return path
+    return None
+
+
+def discover_agent_files(root: Path) -> list[Path]:
+    files: list[Path] = []
+    for directory in (
+        root / "agents",
+        root / ".claude" / "agents",
+        root / ".gemini" / "agents",
+        root / ".opencode" / "agents",
+        root / ".codex" / "agents",
+    ):
+        if not directory.is_dir():
+            continue
+        files.extend(sorted(directory.glob("*.md")))
+        files.extend(sorted(directory.glob("*.toml")))
+    return files
+
+
+def discover_registry(root: Path) -> Path | None:
+    for rel in (
+        "references/agents-registry.md",
+        ".claude/references/agents-registry.md",
+        ".gemini/references/agents-registry.md",
+        ".opencode/references/agents-registry.md",
+        ".codex/references/agents-registry.md",
+    ):
+        path = root / rel
+        if path.is_file():
+            return path
+    return None
+
+
+def load_agent_record(path: Path) -> dict | None:
+    text = path.read_text(encoding="utf-8")
+    if path.suffix == ".toml":
+        name_match = re.search(r'(?m)^name\s*=\s*"([^"]+)"', text)
+        desc_match = re.search(r'(?m)^description\s*=\s*"(.*)"\s*$', text)
+        if not name_match or not desc_match:
+            return None
+        name = name_match.group(1)
+        description = desc_match.group(1)
+    else:
+        fields = parse_frontmatter(text)
+        name = fields.get("name") or path.stem
+        description = fields.get("description", "")
+    if name in CORE_AGENTS:
+        return None
+    phrases = quoted_phrases(trigger_region(description) or description)
+    return {
+        "name": name,
+        "kind": "custom",
+        "priority": 100,
+        "path": path,
+        "description": description,
+        "phrases": phrases,
+        "triggers": [normalize(p) for p in phrases],
+    }
+
+
+def registry_status(path: Path | None) -> dict[str, str]:
+    if path is None:
+        return {}
+    text = path.read_text(encoding="utf-8")
+    start = text.find("<!-- MBIFC:CUSTOM_AGENTS_START -->")
+    end = text.find("<!-- MBIFC:CUSTOM_AGENTS_END -->")
+    block = text[start:end] if start >= 0 and end > start else text
+    status: dict[str, str] = {}
+    for line in block.splitlines():
+        if not line.startswith("|"):
+            continue
+        cols = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cols) < 2 or cols[0] in {"Name", "------"} or set(cols[0]) <= {"-"}:
+            continue
+        name = cols[0].strip("`")
+        if name.lower() in {"name", "skill"} or name.startswith("-"):
+            continue
+        status[name] = cols[-1].lower()
+    return status
+
+
+def load_eval_files(directory: Path) -> list[dict]:
+    if not directory.is_dir():
+        return []
+    suites = []
+    for path in sorted(directory.glob("*.json")):
+        data = json.loads(path.read_text(encoding="utf-8"))
+        data["_path"] = str(path)
+        suites.append(data)
+    return suites
+
+
+def route(query: str, skills: dict[str, list[str]], agents: list[dict]) -> tuple[str, str]:
+    query_norm = normalize(query)
+    skill_hits: list[tuple[int, str]] = []
+    for name, triggers in skills.items():
+        for trigger in triggers:
+            if contains_phrase(query_norm, trigger):
+                skill_hits.append((len(trigger), name))
+    if skill_hits:
+        best_len = max(hit[0] for hit in skill_hits)
+        names = sorted({name for length, name in skill_hits if length == best_len})
+        if len(names) != 1:
+            return ("ambiguous", ",".join(names))
+        return ("skill", names[0])
+
+    best: tuple[int, int, str] | None = None
+    tied: set[str] = set()
+    for agent in agents:
+        for trigger in agent["triggers"]:
+            if not contains_phrase(query_norm, trigger):
+                continue
+            cand = (len(trigger), agent["priority"], agent["name"])
+            if best is None or cand[0] > best[0] or (cand[0] == best[0] and cand[1] < best[1]):
+                best = cand
+                tied = {cand[2]}
+            elif cand[0] == best[0] and cand[1] == best[1] and cand[2] != best[2]:
+                tied.add(cand[2])
+    if best is None:
+        return ("none", "")
+    if len(tied) != 1:
+        return ("ambiguous", ",".join(sorted(tied)))
+    return ("agent", best[2])
+
+
+def expect_match(expect: str, kind: str, name: str) -> bool:
+    expect = expect.strip()
+    if expect == "none":
+        return kind == "none"
+    if ":" in expect:
+        want_kind, _, want_name = expect.partition(":")
+        return kind == want_kind and name == want_name
+    return name == expect and kind in {"skill", "agent"}
+
+
+def lint_skill(skill: dict, failures: list[str], require_languages: bool) -> None:
+    name = skill["name"]
+    label = f"skill {name}"
+    if skill["path"].parent.name != name:
+        failures.append(f"{label}: frontmatter name does not match directory {skill['path'].parent.name}")
+    description = skill["description"]
+    if not description.strip():
+        failures.append(f"{label}: description is empty")
+        return
+    if len(description) > DESC_MAX:
+        failures.append(f"{label}: description is {len(description)} characters (max {DESC_MAX})")
+    if "<" in description or ">" in description:
+        failures.append(f"{label}: description contains an XML-like tag")
+    if "triggers:" not in description.casefold():
+        failures.append(f"{label}: description has no Triggers: section")
+    if require_languages:
+        region = trigger_region(description)
+        if "EN:" not in region:
+            failures.append(f"{label}: triggers are missing an EN: list")
+        if "IT:" not in region:
+            failures.append(f"{label}: triggers are missing an IT: list")
+    if not skill["phrases"]:
+        failures.append(f"{label}: no double-quoted trigger phrases found")
+
+
+def check_sync(skill: dict, dispatcher_phrases: list[str] | None, failures: list[str]) -> None:
+    if dispatcher_phrases is None:
+        failures.append(f"skill {skill['name']}: missing from the dispatcher skill table")
+        return
+    desc = {normalize(p): p for p in skill["phrases"]}
+    disp = {normalize(p): p for p in dispatcher_phrases}
+    only_desc = sorted(set(desc) - set(disp))
+    only_disp = sorted(set(disp) - set(desc))
+    for key in only_desc:
+        failures.append(
+            f"skill {skill['name']}: description trigger {desc[key]!r} is not in the dispatcher table"
+        )
+    for key in only_disp:
+        failures.append(
+            f"skill {skill['name']}: dispatcher trigger {disp[key]!r} is not in the skill description"
+        )
+
+
+def check_shared_skill_triggers(skills: list[dict], failures: list[str]) -> None:
+    owner: dict[str, tuple[str, str]] = {}
+    for skill in skills:
+        for raw, norm in zip(skill["phrases"], skill["triggers"]):
+            if norm in owner and owner[norm][0] != skill["name"]:
+                failures.append(
+                    f"trigger {raw!r} is listed for both {owner[norm][0]} and {skill['name']}"
+                )
+            else:
+                owner.setdefault(norm, (skill["name"], raw))
+
+
+def check_queries(
+    label: str,
+    queries: list[dict],
+    skills: dict[str, list[str]],
+    agents: list[dict],
+    failures: list[str],
+) -> int:
+    count = 0
+    for item in queries:
+        query = item.get("query", "")
+        expect = item.get("expect", "")
+        if not query or not expect:
+            failures.append(f"{label}: routing case is missing query or expect")
+            continue
+        kind, name = route(query, skills, agents)
+        count += 1
+        if expect_match(expect, kind, name):
+            continue
+        got = "no route" if kind == "none" else f"{kind}:{name}"
+        failures.append(f"{label}: {query!r} routed to {got}, expected {expect}")
+    return count
+
+
+def skill_trigger_map(skills: list[dict]) -> dict[str, list[str]]:
+    return {skill["name"]: skill["triggers"] for skill in skills}
+
+
+def evaluate_repo(repo: Path) -> dict:
+    failures: list[str] = []
+    skill_root = repo / "skills"
+    skills = [load_skill_file(path) for path in sorted(skill_root.glob("*/SKILL.md"))]
+    if not skills:
+        failures.append(f"no skills found under {skill_root}")
+    dispatcher_path = repo / "DISPATCHER.md"
+    dispatcher_skills, core_agents = parse_dispatcher(dispatcher_path.read_text(encoding="utf-8"))
+    for skill in skills:
+        lint_skill(skill, failures, require_languages=True)
+        check_sync(skill, dispatcher_skills.get(skill["name"]), failures)
+    check_shared_skill_triggers(skills, failures)
+
+    routes = skill_trigger_map(skills)
+    agents = core_agents
+    checks = 0
+    for skill in skills:
+        for phrase in skill["phrases"]:
+            checks += check_queries(
+                f"skill {skill['name']} description",
+                [{"query": phrase, "expect": f"skill:{skill['name']}"}],
+                routes,
+                agents,
+                failures,
+            )
+
+    eval_dir = repo / "evals" / "skills"
+    suites = load_eval_files(eval_dir)
+    covered = {Path(suite["_path"]).stem for suite in suites}
+    for skill in skills:
+        if skill["name"] not in covered:
+            failures.append(f"skill {skill['name']}: missing evals/skills/{skill['name']}.json")
+    for suite in suites:
+        rel = Path(suite["_path"]).name
+        declared = suite.get("skills") or []
+        if not declared:
+            failures.append(f"{rel}: missing skills array")
+        behaviors = suite.get("expected_behavior") or []
+        if len(behaviors) < 3:
+            failures.append(f"{rel}: expected_behavior needs at least 3 observable outcomes")
+        routing = list(suite.get("routing") or [])
+        if suite.get("query"):
+            routing.append({"query": suite["query"], "expect": declared[0] if declared else ""})
+        if len(routing) < 3:
+            failures.append(f"{rel}: routing needs at least 3 queries")
+        checks += check_queries(rel, routing, routes, agents, failures)
+
+    cross = repo / "evals" / "cross-routing.json"
+    if cross.is_file():
+        data = json.loads(cross.read_text(encoding="utf-8"))
+        checks += check_queries("cross-routing", data.get("routing") or [], routes, agents, failures)
+    else:
+        failures.append("missing evals/cross-routing.json")
+
+    return {
+        "ok": not failures,
+        "mode": "repo",
+        "skills": len(skills),
+        "custom_agents": [],
+        "checks": checks,
+        "failures": failures,
+    }
+
+
+def evaluate_vault(vault: Path) -> dict:
+    failures: list[str] = []
+    skill_dirs = discover_skill_dirs(vault)
+    skills: list[dict] = []
+    seen: set[str] = set()
+    for directory in skill_dirs:
+        for path in sorted(directory.glob("*/SKILL.md")):
+            skill = load_skill_file(path)
+            if skill["name"] in seen:
+                continue
+            seen.add(skill["name"])
+            skills.append(skill)
+    if not skills:
+        failures.append(f"no skills found in {vault}")
+
+    dispatcher_path = discover_dispatcher(vault)
+    dispatcher_skills: dict[str, list[str]] = {}
+    core_agents: list[dict] = []
+    if dispatcher_path is None:
+        failures.append("no dispatcher file with a skill routing table found in the vault")
+    else:
+        dispatcher_skills, core_agents = parse_dispatcher(
+            dispatcher_path.read_text(encoding="utf-8")
+        )
+
+    for skill in skills:
+        lint_skill(skill, failures, require_languages=True)
+        if dispatcher_path is not None:
+            check_sync(skill, dispatcher_skills.get(skill["name"]), failures)
+    check_shared_skill_triggers(skills, failures)
+
+    registry = registry_status(discover_registry(vault))
+    custom: list[dict] = []
+    for path in discover_agent_files(vault):
+        record = load_agent_record(path)
+        if record is None:
+            continue
+        status = registry.get(record["name"])
+        if status == "disabled":
+            continue
+        if status is None:
+            failures.append(
+                f"custom agent {record['name']}: file {path.name} is not an active row in agents-registry.md"
+            )
+            continue
+        if len(set(record["triggers"])) < MIN_CUSTOM_TRIGGERS:
+            failures.append(
+                f"custom agent {record['name']}: {len(set(record['triggers']))} quoted trigger phrases; need at least {MIN_CUSTOM_TRIGGERS}"
+            )
+        if record["name"] in {skill["name"] for skill in skills} or record["name"] in CORE_AGENTS:
+            failures.append(f"custom agent {record['name']}: name collides with a core skill or agent")
+        custom.append(record)
+
+    for name, status in registry.items():
+        if status != "active" or name in CORE_AGENTS:
+            continue
+        if not any(agent["name"] == name for agent in custom):
+            failures.append(f"custom agent {name}: registry says active but no agent file was found")
+
+    routes = skill_trigger_map(skills)
+    agents = core_agents + custom
+    checks = 0
+    for skill in skills:
+        for phrase in skill["phrases"]:
+            checks += check_queries(
+                f"skill {skill['name']} description",
+                [{"query": phrase, "expect": f"skill:{skill['name']}"}],
+                routes,
+                agents,
+                failures,
+            )
+    for agent in custom:
+        for phrase in agent["phrases"]:
+            checks += check_queries(
+                f"custom agent {agent['name']}",
+                [{"query": phrase, "expect": f"agent:{agent['name']}"}],
+                routes,
+                agents,
+                failures,
+            )
+
+    for suite in load_eval_files(vault / "Meta" / "evals" / "skills"):
+        rel = Path(suite["_path"]).name
+        declared = suite.get("skills") or [Path(suite["_path"]).stem]
+        routing = list(suite.get("routing") or [])
+        if suite.get("query") and declared:
+            routing.append({"query": suite["query"], "expect": declared[0]})
+        checks += check_queries(rel, routing, routes, agents, failures)
+    for suite in load_eval_files(vault / "Meta" / "evals" / "agents"):
+        rel = Path(suite["_path"]).name
+        agent_name = suite.get("agent") or Path(suite["_path"]).stem
+        routing = list(suite.get("routing") or [])
+        checks += check_queries(rel, routing, routes, agents, failures)
+        if not any(agent["name"] == agent_name for agent in custom):
+            failures.append(f"{rel}: eval exists but {agent_name} is not an active custom agent")
+
+    active_names = [agent["name"] for agent in custom]
+    return {
+        "ok": not failures,
+        "mode": "vault",
+        "skills": len(skills),
+        "custom_agents": active_names,
+        "checks": checks,
+        "failures": failures,
+    }
+
+
+def default_target(script: Path) -> tuple[str, Path]:
+    if script.parent.name == "scripts" and script.parent.parent.name == "Meta":
+        return "vault", script.parent.parent.parent
+    return "repo", script.parent.parent
+
+
+def render(result: dict, as_json: bool) -> str:
+    if as_json:
+        return json.dumps(result, indent=2, ensure_ascii=False)
+    lines = [
+        f"Skill routing evals ({result['mode']})",
+        f"  skills: {result['skills']}",
+        f"  custom agents: {len(result['custom_agents'])}"
+        + (f" ({', '.join(result['custom_agents'])})" if result["custom_agents"] else ""),
+        f"  checks: {result['checks']}",
+        f"  failures: {len(result['failures'])}",
+    ]
+    for failure in result["failures"]:
+        lines.append(f"  - {failure}")
+    if result["ok"]:
+        lines.append("PASS")
+    else:
+        lines.append("FAIL")
+    return "\n".join(lines)
+
+
+def main(argv: list[str] | None = None) -> int:
+    script = Path(__file__).resolve()
+    implied_mode, implied_root = default_target(script)
+    parser = argparse.ArgumentParser(description="Evaluate skill and custom-agent trigger routing")
+    parser.add_argument("--vault", type=Path, help="Evaluate an installed vault")
+    parser.add_argument("--repo", type=Path, help="Evaluate a crew checkout (default: this repo)")
+    parser.add_argument("--json", action="store_true", help="Print machine-readable results")
+    args = parser.parse_args(argv)
+
+    if args.vault and args.repo:
+        parser.error("pass only one of --vault or --repo")
+    if args.vault:
+        result = evaluate_vault(args.vault.resolve())
+    elif args.repo:
+        result = evaluate_repo(args.repo.resolve())
+    elif implied_mode == "vault":
+        result = evaluate_vault(implied_root)
+    else:
+        result = evaluate_repo(implied_root)
+
+    print(render(result, args.json))
+    return 0 if result["ok"] else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

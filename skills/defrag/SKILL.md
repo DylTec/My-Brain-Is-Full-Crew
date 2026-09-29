@@ -6,7 +6,7 @@ description: >
   evolution, and generates a report. Triggers:
   EN: "defragment the vault", "reorganize the vault", "structural maintenance", "vault defrag", "weekly defrag".
   IT: "deframmenta il vault", "riorganizza il vault", "manutenzione strutturale", "defrag settimanale".
-  FR: "defragmenter le vault", "reorganiser le vault".
+  FR: "défragmenter le vault", "réorganiser le vault".
   ES: "desfragmentar el vault", "reorganizar el vault".
   DE: "Vault defragmentieren", "Vault reorganisieren".
   PT: "desfragmentar o vault", "reorganizar o vault".

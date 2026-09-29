@@ -87,7 +87,15 @@ When the user says "edit my agent", "update agent X", "modify agent X", or equiv
 
 7. **Log the change** in `{{meta}}/agent-log.md`.
 
-8. **Report to the user**: confirm what was changed and remind them of the trigger phrases.
+8. **Refresh the routing eval** when triggers or the description changed. Rewrite `{{meta}}/evals/agents/{name}.json` so every current trigger phrase is a `routing` query with `"expect": "agent:{name}"`. Then run:
+
+```bash
+python3 {{meta}}/scripts/eval-routing
+```
+
+The eval covers the whole crew, including agents added since this one was created. If it fails, the new phrase collides with a skill or another agent — pick a different phrase with the user and run it again before reporting success. If the script is missing, ask the user to run `bash scripts/updateme.sh` from the crew repo first.
+
+9. **Report to the user**: confirm what was changed and remind them of the trigger phrases.
 
 ---
 
@@ -102,9 +110,11 @@ When the user says "remove agent", "delete agent X", "rimuovi agente", or equiva
 
 3. **If confirmed:**
    - Delete the agent file from `.platform/agents/{name}.md`
+   - Delete `{{meta}}/evals/agents/{name}.json` if it exists
    - Update `.platform/references/agents-registry.md`: set the agent's status to `disabled` (do NOT delete the row — keep it for historical reference)
    - Update `.platform/references/agents.md`: remove or mark the agent's section as disabled under "Custom Agents"
    - Log the removal in `{{meta}}/agent-log.md`
+   - Run `python3 {{meta}}/scripts/eval-routing` so the remaining agents are checked against the crew as it exists now. If the script is missing, ask the user to run `bash scripts/updateme.sh` from the crew repo.
 
 4. **If not confirmed:** acknowledge and do nothing.
 

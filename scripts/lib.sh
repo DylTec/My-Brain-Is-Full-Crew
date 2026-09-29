@@ -488,6 +488,44 @@ install_dispatcher() {
   [[ $_LAST_CHANGED -eq 1 && $VERBOSE_COPY -eq 1 ]] && info "Updated $(basename "$dst")" || true
 }
 
+# install_routing_evals <repo_dir> <vault_dir>
+# Copies the trigger-routing eval runner and the core skill eval fixtures into
+# the vault. Custom-agent evals under Meta/evals/agents/ are never touched.
+# Prints the number of skill eval files installed.
+install_routing_evals() {
+  local repo_dir="$1" vault_dir="$2"
+  local src_script="$repo_dir/orchestra/eval-routing"
+  local src_evals="$repo_dir/evals/skills"
+  local dst_script="$vault_dir/Meta/scripts/eval-routing"
+  local dst_evals="$vault_dir/Meta/evals/skills"
+  local manifest="$dst_evals/.core-manifest"
+  [[ -f "$src_script" ]] || { printf '0'; return 0; }
+  mkdir -p "$vault_dir/Meta/scripts" "$dst_evals"
+  cp "$src_script" "$dst_script"
+  chmod +x "$dst_script"
+  : > "$manifest"
+  local count=0
+  local src name
+  if [[ -d "$src_evals" ]]; then
+    for src in "$src_evals/"*.json; do
+      [[ -f "$src" ]] || continue
+      name="$(basename "$src")"
+      cp "$src" "$dst_evals/$name"
+      echo "$name" >> "$manifest"
+      count=$((count + 1))
+    done
+  fi
+  local existing
+  for existing in "$dst_evals/"*.json; do
+    [[ -f "$existing" ]] || continue
+    name="$(basename "$existing")"
+    if ! grep -qx "$name" "$manifest"; then
+      rm -f "$existing"
+    fi
+  done
+  printf '%d' "$count"
+}
+
 # ── UI helpers ────────────────────────────────────────────────────────────────
 
 print_banner() {

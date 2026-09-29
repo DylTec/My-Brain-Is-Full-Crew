@@ -1,0 +1,30 @@
+{
+  "skills": [
+    "defrag"
+  ],
+  "query": "defragment the vault",
+  "files": [],
+  "expected_behavior": [
+    "Runs the structural phases in order and finishes with a report",
+    "Reads Meta/vault-map.md before substituting folder paths",
+    "Reports follow-up work with a suggested next agent instead of doing that agent's job"
+  ],
+  "routing": [
+    {
+      "query": "defragment the vault",
+      "expect": "skill:defrag"
+    },
+    {
+      "query": "deframmenta il vault",
+      "expect": "skill:defrag"
+    },
+    {
+      "query": "can we do the weekly defrag tonight",
+      "expect": "skill:defrag"
+    },
+    {
+      "query": "défragmenter le vault",
+      "expect": "skill:defrag"
+    }
+  ]
+}

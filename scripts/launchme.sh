@@ -256,6 +256,9 @@ if [[ -d "$REPO_DIR/orchestra" ]]; then
   success "Copied $ORCH_COUNT orchestra scripts to Meta/scripts/"
 fi
 
+EVAL_COUNT=$(install_routing_evals "$REPO_DIR" "$VAULT_DIR")
+success "Routing evals: $EVAL_COUNT skill fixtures installed"
+
 PLUGIN_COUNT=0
 if [[ $HAS_PLUGINS -eq 1 && -d "$DIST_COMPONENTS_DIR/plugins" ]]; then
   info "Installing plugins..."

@@ -157,6 +157,8 @@ You talk naturally  →  Dispatcher checks skills first  →  If match: invokes 
 
 The dispatcher has two delegation mechanisms. **Skills** handle complex, multi-step conversational flows (onboarding, email triage, vault audits). **Agents** handle quick, reactive single-shot operations (capture a note, search the vault, create a folder). Skills are checked first because they cover the most involved workflows. If no skill matches, the dispatcher falls through to agents.
 
+After setup, `python3 Meta/scripts/eval-routing` checks that each skill phrase still reaches that skill. Run it again whenever you add, edit, or remove a custom agent — the check reads the agents currently in the vault, so a new agent cannot silently steal a phrase from a skill or from another agent.
+
 Each crew member is an isolated AI with its own system prompt, tool restrictions, and model assignment. You clone the repo into your vault, run a setup script, and from that moment on you manage everything through conversation. No GUI, no drag-and-drop, no manual file management.
 
 ### Architecture

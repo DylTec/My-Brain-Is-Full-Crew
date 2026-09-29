@@ -1,0 +1,30 @@
+{
+  "skills": [
+    "create-agent"
+  ],
+  "query": "create a new agent",
+  "files": [],
+  "expected_behavior": [
+    "Asks one interview question at a time and waits for the answer",
+    "Writes the agent file, registry row, and agents.md entry only after the user confirms",
+    "Writes Meta/evals/agents/<name>.json and does not call the agent active until routing evals pass"
+  ],
+  "routing": [
+    {
+      "query": "create a new agent",
+      "expect": "skill:create-agent"
+    },
+    {
+      "query": "crea un nuovo agente",
+      "expect": "skill:create-agent"
+    },
+    {
+      "query": "I need a new agent for grocery budgets",
+      "expect": "skill:create-agent"
+    },
+    {
+      "query": "new crew member please",
+      "expect": "skill:create-agent"
+    }
+  ]
+}

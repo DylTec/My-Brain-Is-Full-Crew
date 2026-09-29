@@ -1,0 +1,30 @@
+{
+  "skills": [
+    "inbox-triage"
+  ],
+  "query": "triage the inbox",
+  "files": [],
+  "expected_behavior": [
+    "Classifies each inbox note and routes it using vault-role paths from Meta/vault-map.md",
+    "Leaves a note in the inbox and suggests Architect when the destination folder does not exist",
+    "Updates MOCs and includes extracted action items in the digest"
+  ],
+  "routing": [
+    {
+      "query": "triage the inbox",
+      "expect": "skill:inbox-triage"
+    },
+    {
+      "query": "smista l'inbox",
+      "expect": "skill:inbox-triage"
+    },
+    {
+      "query": "please empty inbox before dinner",
+      "expect": "skill:inbox-triage"
+    },
+    {
+      "query": "trier la boîte de réception",
+      "expect": "skill:inbox-triage"
+    }
+  ]
+}

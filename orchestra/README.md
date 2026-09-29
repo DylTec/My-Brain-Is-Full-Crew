@@ -29,7 +29,8 @@ After installation, add the orchestra scripts to your agentic platform's permiss
       "Bash(Meta/scripts/tracker-mailbox:*)",
       "Bash(Meta/scripts/vault-stats:*)",
       "Bash(Meta/scripts/vault-inbox:*)",
-      "Bash(Meta/scripts/contact-lookup:*)"
+      "Bash(Meta/scripts/contact-lookup:*)",
+      "Bash(Meta/scripts/eval-routing:*)"
     ]
   }
 }
@@ -73,6 +74,7 @@ The tracker is populated by a cron job running `hey-poll.sh` (see the Hey poller
 |--------|-------|-------------|
 | `vault-stats` | `vault-stats` | Note counts by folder, recent activity |
 | `vault-inbox` | `vault-inbox [--count]` | List inbox notes (or just count them) |
+| `eval-routing` | `eval-routing` | Check that skill and custom-agent trigger phrases still route correctly. Re-run after adding or removing agents. |
 
 ## Requirements
 

@@ -1,0 +1,30 @@
+{
+  "skills": [
+    "tag-garden"
+  ],
+  "query": "tag garden",
+  "files": [],
+  "expected_behavior": [
+    "Lists unused, orphan, near-duplicate, and over- or under-used tags",
+    "Suggests merges and waits for confirmation before renaming tags",
+    "Does not start a full vault audit when only tags were requested"
+  ],
+  "routing": [
+    {
+      "query": "tag garden",
+      "expect": "skill:tag-garden"
+    },
+    {
+      "query": "pulizia tag",
+      "expect": "skill:tag-garden"
+    },
+    {
+      "query": "can you clean up tags in the vault",
+      "expect": "skill:tag-garden"
+    },
+    {
+      "query": "run a tag audit",
+      "expect": "skill:tag-garden"
+    }
+  ]
+}

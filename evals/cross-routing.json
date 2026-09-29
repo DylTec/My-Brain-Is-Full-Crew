@@ -1,0 +1,36 @@
+{
+  "routing": [
+    {
+      "query": "please jot this down for later",
+      "expect": "agent:scribe"
+    },
+    {
+      "query": "batch sort these notes",
+      "expect": "agent:sorter"
+    },
+    {
+      "query": "where did I put the grant notes",
+      "expect": "agent:seeker"
+    },
+    {
+      "query": "create a new area for health",
+      "expect": "agent:architect"
+    },
+    {
+      "query": "what's on my calendar tomorrow",
+      "expect": "agent:postman"
+    },
+    {
+      "query": "find connections between these notes",
+      "expect": "agent:connector"
+    },
+    {
+      "query": "quick check of the vault",
+      "expect": "agent:librarian"
+    },
+    {
+      "query": "draft reply to the editor",
+      "expect": "agent:postman"
+    }
+  ]
+}
